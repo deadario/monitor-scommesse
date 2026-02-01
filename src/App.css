@@ -181,4 +181,9 @@
     right: 0;
     border-right-color: var(--border);
   }
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    background-color: #121212; /* Forza il colore di sfondo scuro base */
+    overflow-x: hidden; /* Evita scroll orizzontali indesiderati */
 }
