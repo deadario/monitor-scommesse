@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI ---
+// --- STILI CSS GLOBALI (FIX MOBILE TOUCH) ---
 const globalStyles = `
-  * { -ms-overflow-style: none; scrollbar-width: none; }
+  * { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash al tocco su mobile */
+  }
   *::-webkit-scrollbar { display: none !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+  
+  /* FIX CRITICO PER MOBILE: Disabilita l'hover sui dispositivi touch per evitare il doppio click */
+  @media (hover: none) {
+    *:hover { background-color: inherit !important; border-color: inherit !important; color: inherit !important; }
+  }
+
   body { background-color: #0f172a; color: white; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 `;
@@ -188,7 +198,6 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
     return (
         <div className="bg-[#1e293b] p-4 border-b border-[#334155] animate-in fade-in slide-in-from-top-2">
             <div className="flex justify-end items-center mb-3">
-               {/* MODIFICATO: Stile Allineato anche qui */}
                <div className="flex items-center gap-2">
                   <Ticket size={14} className="text-white"/>
                   {isCreatingGroup ? (
@@ -238,7 +247,6 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
              <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">{statDef.label} <span className="text-gray-500">•</span> <span className="text-white">{activeContext.side}</span></span>
           </div>
           
-          {/* MODIFICATO: Tutto Bianco + Allineamento Verticale */}
           <div className="flex items-center gap-2">
               <Ticket size={14} className="text-white" />
               {isCreatingGroup ? (
