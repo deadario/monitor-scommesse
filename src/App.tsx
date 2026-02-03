@@ -3,11 +3,24 @@ import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, H
 
 // --- STILI CSS GLOBALI ---
 const globalStyles = `
-  * { -ms-overflow-style: none; scrollbar-width: none; }
+  * { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash al tocco */
+    box-sizing: border-box;
+  }
   *::-webkit-scrollbar { display: none !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
-  body { background-color: #0f172a; color: white; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  
+  body { 
+    background-color: #0f172a; 
+    color: white; 
+    margin: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    touch-action: manipulation; /* Velocizza il click */
+  }
+  
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 `;
 
@@ -135,7 +148,8 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
                 return (
                     <div key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        // RIMOSSO transition-colors per evitare lag su touch
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </div>
@@ -152,7 +166,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        <div onClick={onClick} className="flex items-center py-3 px-3 hover:bg-[#25334d] cursor-pointer border-t border-[#334155] bg-[#1e293b]">
+        // FIX CRITICO: RIMOSSO "hover:bg-[#25334d]"
+        <div onClick={onClick} className="flex items-center py-3 px-3 cursor-pointer border-t border-[#334155] bg-[#1e293b]">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -207,12 +222,12 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
             <div className="space-y-2">
                <div className="flex gap-2">
                    {["1", "X", "2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-3 rounded text-xs">{sign}</button>
                    ))}
                </div>
                <div className="flex gap-2">
                    {["1X", "12", "X2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px]">{sign}</button>
                    ))}
                </div>
            </div>
@@ -270,8 +285,8 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
 
        {statDef.id === 'goals' && activeContext.side === 'Totale' && (
            <div className="mt-3 pt-3 border-t border-[#334155] flex gap-2">
-               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
-               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px]">GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px]">NO GOAL</button>
            </div>
        )}
     </div>
@@ -296,7 +311,7 @@ const StatRow = ({ statDef, homeVal, awayVal, onExpand, isExpanded, activeContex
 
   return (
     <div className="bg-[#020617] last:border-0">
-      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'hover:bg-[#172033] transition-colors'}`}>
+      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'transition-colors'}`}>
           <div className="flex justify-between items-center mb-2 text-sm font-medium">
               <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
               <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'}`}>{statDef.label}</div>
@@ -373,7 +388,7 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       {showMainBets && <MainBettingWidget onAdd={handleAddMainBet} ticketGroups={ticketGroups} onAddGroup={onAddGroup} />}
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
-          <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
+          <div className="flex overflow-x-auto no-scrollbar">{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
           {activeTab === "STATISTICHE" && (
@@ -689,7 +704,8 @@ export default function App() {
         )}
         <div className="space-y-0">{dataList.map((league) => (
             <div key={league.id} className="bg-[#0f172a] border-b border-[#334155] last:border-0">
-                <div onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="flex justify-between items-center px-3 py-2 bg-[#334155] hover:bg-[#3d4e6b] cursor-pointer">
+                {/* FIX: Rimosso hover:bg-... */}
+                <div onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="flex justify-between items-center px-3 py-2 bg-[#334155] cursor-pointer">
                     <div className="flex items-center gap-3">
                         <Star size={16} onClick={(e) => { e.stopPropagation(); setLeagues(leagues.map(l => l.id === league.id ? { ...l, isPinned: !l.isPinned } : l)); }} className={`cursor-pointer ${league.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500 hover:text-gray-400'}`} />
                         <img src={`https://flagcdn.com/20x15/${league.country}.png`} alt={league.country} className="w-4 h-3 rounded-[1px] shadow-sm"/><span className="text-xs font-bold text-white uppercase">{league.name}</span>
