@@ -729,6 +729,7 @@ export default function App() {
             <>
                 {activeTab === 'tutte' && (
                     <div className={touchStart ? 'opacity-90' : ''}>
+                        <DateBar selectedDateId={selectedDateId} onDateClick={setSelectedDateId} />
                         <LeagueGroup title="MONITORATI" dataList={pinnedLeagues} variant="primary" />
                         <LeagueGroup title="TUTTI I CAMPIONATI" dataList={otherLeagues} variant="default" />
                     </div>
