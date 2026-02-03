@@ -1,24 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI (FIX MOBILE TOUCH) ---
+// --- STILI CSS GLOBALI (MOBILE TOUCH FIX + NO SCROLLBAR) ---
 const globalStyles = `
   * { 
     -ms-overflow-style: none; 
     scrollbar-width: none; 
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash al tocco su mobile */
+    -webkit-tap-highlight-color: transparent; 
   }
+  
+  /* REGOLE SCROLLBAR */
   *::-webkit-scrollbar { display: none !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
-  
-  /* FIX CRITICO PER MOBILE: Disabilita l'hover sui dispositivi touch per evitare il doppio click */
-  @media (hover: none) {
-    *:hover { background-color: inherit !important; border-color: inherit !important; color: inherit !important; }
+
+  /* FIX CRITICO MOBILE: Disabilita lo zoom al doppio tocco e velocizza il click */
+  html, body { 
+    background-color: #0f172a; 
+    color: white; 
+    margin: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    touch-action: manipulation; /* <--- QUESTA È LA CHIAVE PER IL CLICK SINGOLO */
   }
 
-  body { background-color: #0f172a; color: white; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  /* TRANSIZIONI */
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+
+  /* FIX HOVER SU MOBILE: Impedisce che il primo tocco venga "mangiato" dall'effetto hover */
+  @media (hover: none) {
+    .match-row:hover { background-color: #1e293b !important; }
+    .clickable-item:hover { background-color: inherit !important; opacity: 1 !important; }
+  }
 `;
 
 // --- ICONA PALLONE CUSTOM ---
@@ -139,13 +151,14 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
   const handleClick = (id) => { onDateClick(id); centerItem(id); };
   return (
     <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg">
+        {/* Style inline per forzare l'assenza di scrollbar */}
         <div ref={scrollContainerRef} className="flex w-full overflow-x-auto no-scrollbar items-center px-2 gap-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dateList.map((d) => {
                 const isSelected = selectedDateId === d.id;
                 return (
                     <div key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 clickable-item ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </div>
@@ -162,7 +175,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        <div onClick={onClick} className="flex items-center py-3 px-3 hover:bg-[#25334d] cursor-pointer border-t border-[#334155] bg-[#1e293b]">
+        // Added match-row class for safe mobile selection
+        <div onClick={onClick} className="match-row flex items-center py-3 px-3 hover:bg-[#25334d] cursor-pointer border-t border-[#334155] bg-[#1e293b]">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
