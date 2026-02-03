@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI (VERSIONE 4.5 - NO INLINE HOVERS) ---
+// --- STILI CSS GLOBALI (NO HOVER - SOLO ACTIVE) ---
 const globalStyles = `
   * { 
     -ms-overflow-style: none; 
@@ -33,32 +33,14 @@ const globalStyles = `
     -webkit-appearance: none;
   }
 
+  /* TRANSIZIONI */
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+  .transition-colors { transition-property: background-color, border-color, color; transition-duration: 100ms; }
 
-  /* --- GESTIONE INTERAZIONI MOBILE-FIRST --- */
-
-  /* 1. SU MOBILE (TOUCH): NESSUN HOVER, SOLO ACTIVE */
-  .match-row:active { background-color: #25334d !important; }
-  .league-header:active { background-color: #3d4e6b !important; }
-  .date-item:active { background-color: #1e293b !important; }
-  .nav-item:active { transform: scale(0.95); opacity: 0.7; }
-  
-  .btn-primary:active { background-color: #0891b2 !important; }
-  .btn-secondary:active { background-color: #334155 !important; }
-
-  /* 2. SU DESKTOP (MOUSE): ABILITA GLI EFFETTI HOVER */
-  @media (hover: hover) {
-    .match-row:hover { background-color: #25334d; cursor: pointer; }
-    .league-header:hover { background-color: #3d4e6b; cursor: pointer; }
-    .date-item:hover { border-color: #22d3ee; cursor: pointer; }
-    .nav-item:hover { opacity: 1; cursor: pointer; color: white; }
-    
-    .btn-primary:hover { background-color: #0891b2; }
-    .btn-secondary:hover { background-color: #334155; }
-    
-    /* Icone header */
-    .icon-hover:hover { color: white; cursor: pointer; }
-  }
+  /* CLASSI DI UTILITÀ PER GLI STATI ACTIVE (PREMUTO) */
+  .active-scale:active { transform: scale(0.97); }
+  .active-bg-dark:active { background-color: #334155 !important; }
+  .active-opacity:active { opacity: 0.7; }
 `;
 
 // --- ICONA PALLONE CUSTOM ---
@@ -159,7 +141,7 @@ const HomeHeader = () => (
           <ChevronDown size={14} className="text-gray-400" />
       </div>
       <div className="flex items-center gap-4">
-          <Search size={20} className="text-gray-400 icon-hover" /><div className="relative"><User size={20} className="text-gray-400 icon-hover" /></div>
+          <Search size={20} className="text-gray-400" /><div className="relative"><User size={20} className="text-gray-400" /></div>
       </div>
   </div>
 );
@@ -185,8 +167,7 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
                 return (
                     <button key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        // Rimosso 'transition-colors' per evitare lag, classi date-item per css
-                        className={`date-item flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] transition-colors rounded-none border-b-2 active-bg-dark ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </button>
@@ -203,8 +184,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        // Rimosso hover:bg-... inline. Usa classe match-row.
-        <button onClick={onClick} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b]">
+        // NO HOVER CLASS, SOLO active:
+        <button onClick={onClick} className="w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b] active-bg-dark transition-colors duration-75">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -259,12 +240,12 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
             <div className="space-y-2">
                <div className="flex gap-2">
                    {["1", "X", "2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] btn-secondary border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
                    ))}
                </div>
                <div className="flex gap-2">
                    {["1X", "12", "X2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] btn-secondary border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
                    ))}
                </div>
            </div>
@@ -308,22 +289,22 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
 
        <div className="flex items-center justify-between gap-3 h-10">
           <div className="flex flex-1 gap-2 h-full">
-              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 btn-primary text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] btn-secondary text-gray-400 border-[#334155]'}`}>UNDER</button>
-              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 btn-primary text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] btn-secondary text-gray-400 border-[#334155]'}`}>OVER</button>
+              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>UNDER</button>
+              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>OVER</button>
           </div>
           <div className="relative h-full w-20">
               <select value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} className="w-full h-full bg-[#0f172a] text-white font-bold text-lg text-center appearance-none rounded-md border border-[#334155] focus:border-cyan-500 focus:outline-none">{statDef.lines.map(line => <option key={line} value={line}>{line}</option>)}</select>
               <ChevronDown size={14} className="absolute top-0 right-1 h-full pointer-events-none text-gray-500 flex items-center"/>
           </div>
-          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 btn-primary text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 active:bg-cyan-600 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
               <Plus size={24} strokeWidth={3} />
           </button>
        </div>
 
        {statDef.id === 'goals' && activeContext.side === 'Totale' && (
            <div className="mt-3 pt-3 border-t border-[#334155] flex gap-2">
-               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] btn-secondary border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
-               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] btn-secondary border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
            </div>
        )}
     </div>
@@ -348,11 +329,11 @@ const StatRow = ({ statDef, homeVal, awayVal, onExpand, isExpanded, activeContex
 
   return (
     <div className="bg-[#020617] last:border-0">
-      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'match-row'}`}>
+      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'active-bg-dark transition-colors'}`}>
           <div className="flex justify-between items-center mb-2 text-sm font-medium">
-              <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors clickable-item ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
-              <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors clickable-item ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'}`}>{statDef.label}</div>
-              <div onClick={() => onExpand(statDef.id, "Ospite", awayVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors clickable-item ${isExpanded && activeContext.side === 'Ospite' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{awayVal}</div>
+              <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors active-opacity ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
+              <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors active-opacity ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400'}`}>{statDef.label}</div>
+              <div onClick={() => onExpand(statDef.id, "Ospite", awayVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors active-opacity ${isExpanded && activeContext.side === 'Ospite' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{awayVal}</div>
           </div>
           <div className="flex gap-1 h-1 mt-1 opacity-80">
               <div className="flex-1 flex justify-end bg-[#334155] rounded-l-full overflow-hidden">
@@ -403,10 +384,10 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
   return (
     <div className="pb-24 bg-[#0f172a] min-h-screen relative z-30 flex flex-col animate-in slide-in-from-right duration-300">
       <div className="bg-[#1e293b] sticky top-0 z-50 border-b border-[#334155] flex justify-between items-center p-4 shadow-md">
-         <ArrowLeft className="text-gray-400 cursor-pointer hover:text-white clickable-item" onClick={onClose} />
+         <ArrowLeft className="text-gray-400 cursor-pointer active-opacity" onClick={onClose} />
          <div className="flex items-center gap-4">
-            <Bell size={20} className="text-gray-400 hover:text-white cursor-pointer clickable-item" />
-            <Star size={22} className={`cursor-pointer clickable-item transition-all active:scale-90 ${isMonitored ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400 hover:text-white'}`} onClick={() => onToggleMonitor(match)}/>
+            <Bell size={20} className="text-gray-400 active-opacity cursor-pointer" />
+            <Star size={22} className={`cursor-pointer transition-all active:scale-90 ${isMonitored ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} onClick={() => onToggleMonitor(match)}/>
          </div>
       </div>
       <div className="bg-[#020617] h-8 flex items-center justify-center border-b border-[#334155]"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{leagueName} • {match.round || "Giornata --"}</span></div>
@@ -414,7 +395,7 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       <div className="bg-[#1e293b] px-6 py-6 flex justify-between items-center border-b border-[#334155]">
             <div className="flex flex-col items-center w-1/3"><div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xl text-white font-bold border-2 border-[#334155] mb-2 shadow-lg" style={{ borderColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div><span className="text-sm font-bold text-white text-center leading-tight">{match.teams[0]}</span></div>
             
-            <div className="flex flex-col items-center cursor-pointer active:scale-95 transition-transform p-2 rounded hover:bg-[#334155] clickable-item" onClick={() => setShowMainBets(!showMainBets)}>
+            <div className="flex flex-col items-center cursor-pointer active:scale-95 transition-transform p-2 rounded active-bg-dark" onClick={() => setShowMainBets(!showMainBets)}>
                 <div className="text-3xl font-black text-white tracking-widest mb-1">{match.score[0]} - {match.score[1]}</div>
                 <div className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${match.status === 'LIVE' ? 'bg-gray-600 text-white' : 'bg-[#334155] text-gray-400'}`}>{match.minute !== '-' ? match.minute : match.time}</div>
             </div>
@@ -426,7 +407,7 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
           <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {TABS.map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 clickable-item ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</button>))}
+            {TABS.map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent'}`}>{tab}</button>))}
           </div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
@@ -583,7 +564,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="font-mono font-bold text-white">{m.score[0]} - {m.score[1]}</span>
-                                    <Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer clickable-item" onClick={() => onRemoveTicket(t.id)}/>
+                                    <Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer active-opacity" onClick={() => onRemoveTicket(t.id)}/>
                                 </div>
                             </div>
                         );
@@ -613,7 +594,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                     <div key={group} className="animate-in fade-in mb-1">
                          <div className="px-3 py-1 border-b border-[#1e293b] bg-[#020617] flex justify-between items-center shadow-sm">
                              {editingGroup === group ? (
-                                 <div className="flex items-center gap-2 w-full max-w-[200px]"><input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} className="bg-transparent text-[9px] font-bold text-cyan-400 uppercase tracking-widest outline-none border-b border-cyan-500 w-full" onKeyDown={(e) => { if(e.key === 'Enter') saveEdit(); }} onBlur={saveEdit}/><Check size={12} className="text-green-500 cursor-pointer clickable-item" onClick={saveEdit}/></div>
+                                 <div className="flex items-center gap-2 w-full max-w-[200px]"><input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} className="bg-transparent text-[9px] font-bold text-cyan-400 uppercase tracking-widest outline-none border-b border-cyan-500 w-full" onKeyDown={(e) => { if(e.key === 'Enter') saveEdit(); }} onBlur={saveEdit}/><Check size={12} className="text-green-500 cursor-pointer active-opacity" onClick={saveEdit}/></div>
                              ) : (
                                 <span onClick={() => startEdit(group)} className={`text-[9px] font-bold text-cyan-400 uppercase tracking-widest ${group !== "MONITOR STATS" ? 'cursor-pointer hover:underline decoration-dashed' : 'cursor-default'}`}>{group}</span>
                              )}
@@ -656,7 +637,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                                                      </div>
                                                      {matchData.status !== 'NS' ? (<div className="h-[3px] bg-[#1e293b] w-full rounded-full overflow-hidden"><div className="h-full bg-gray-400" style={{ width: `${pct}%` }}></div></div>) : (<div className="h-[3px] bg-[#1e293b] w-full rounded-full opacity-50"></div>)}
                                                  </div>
-                                                 <div className="flex-shrink-0 ml-1"><Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer clickable-item" onClick={() => onRemoveTicket(bet.id)}/></div>
+                                                 <div className="flex-shrink-0 ml-1"><Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer active-opacity" onClick={() => onRemoveTicket(bet.id)}/></div>
                                              </div>
                                          );
                                      })}
@@ -793,7 +774,7 @@ export default function App() {
             </>
           )}
       </div>
-      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="nav-item absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
+      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full active-opacity ${activeTab === 'tutte' && !selectedMatchDetail ? 'text-white opacity-100' : 'text-gray-500 opacity-40'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full active-opacity ${activeTab === 'live' ? 'text-red-500 opacity-100' : 'text-gray-500 opacity-40'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="nav-item absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 active-scale"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500 active-opacity"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500 active-opacity"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
     </div>
   );
 }
