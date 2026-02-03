@@ -20,11 +20,11 @@ const globalStyles = `
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     touch-action: manipulation; 
     overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
   }
 
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 
-  /* Reset per i button su mobile per evitare stili di default brutti */
   button {
     background: none;
     border: none;
@@ -34,14 +34,14 @@ const globalStyles = `
     cursor: pointer;
     outline: inherit;
     -webkit-appearance: none;
+    touch-action: manipulation; /* Importante per i bottoni */
   }
 
-  @media (hover: hover) {
-    .match-row:hover { background-color: #25334d !important; }
-    .clickable-item:hover { opacity: 0.8; }
-  }
+  /* Disabilita completamente hover su mobile */
   @media (hover: none) {
-    .match-row:active { background-color: #25334d !important; }
+    .match-row:hover { background-color: #1e293b !important; }
+    .clickable-item:hover { opacity: 1 !important; }
+    *:hover { background-color: inherit !important; opacity: 1 !important; }
   }
 `;
 
@@ -163,14 +163,16 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
   const handleClick = (id) => { onDateClick(id); centerItem(id); };
   return (
     <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg">
+        {/* Style inline per forzare l'assenza di scrollbar su tutti i browser */}
         <div ref={scrollContainerRef} className="flex w-full overflow-x-auto no-scrollbar items-center px-2 gap-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dateList.map((d) => {
                 const isSelected = selectedDateId === d.id;
                 return (
-                    // FIX: Convertito in BUTTON per risposta immediata su iOS
+                    // FIX: onTouchStart vuoto per iOS
                     <button key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] transition-colors rounded-none border-b-2 clickable-item ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        onTouchStart={() => {}}
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 clickable-item ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </button>
@@ -187,8 +189,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        // FIX: Convertito in BUTTON per risposta immediata su iOS
-        <button onClick={onClick} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
+        // FIX: onTouchStart vuoto per iOS
+        <button onClick={onClick} onTouchStart={() => {}} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -243,12 +245,12 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
             <div className="space-y-2">
                <div className="flex gap-2">
                    {["1", "X", "2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
+                       <button key={sign} onTouchStart={() => {}} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
                    ))}
                </div>
                <div className="flex gap-2">
                    {["1X", "12", "X2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
+                       <button key={sign} onTouchStart={() => {}} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
                    ))}
                </div>
            </div>
@@ -292,22 +294,22 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
 
        <div className="flex items-center justify-between gap-3 h-10">
           <div className="flex flex-1 gap-2 h-full">
-              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>UNDER</button>
-              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>OVER</button>
+              <button onClick={() => setBetType("Under")} onTouchStart={() => {}} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>UNDER</button>
+              <button onClick={() => setBetType("Over")} onTouchStart={() => {}} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>OVER</button>
           </div>
           <div className="relative h-full w-20">
               <select value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} className="w-full h-full bg-[#0f172a] text-white font-bold text-lg text-center appearance-none rounded-md border border-[#334155] focus:border-cyan-500 focus:outline-none">{statDef.lines.map(line => <option key={line} value={line}>{line}</option>)}</select>
               <ChevronDown size={14} className="absolute top-0 right-1 h-full pointer-events-none text-gray-500 flex items-center"/>
           </div>
-          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} onTouchStart={() => {}} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
               <Plus size={24} strokeWidth={3} />
           </button>
        </div>
 
        {statDef.id === 'goals' && activeContext.side === 'Totale' && (
            <div className="mt-3 pt-3 border-t border-[#334155] flex gap-2">
-               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
-               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} onTouchStart={() => {}} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} onTouchStart={() => {}} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
            </div>
        )}
     </div>
@@ -410,8 +412,8 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
           <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* FIX: Tab come BOTTONI per iOS */}
-            {TABS.map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 clickable-item ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</button>))}
+            {/* FIX: onTouchStart vuoto per iOS */}
+            {TABS.map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} onTouchStart={() => {}} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 clickable-item ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</button>))}
           </div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
@@ -724,8 +726,8 @@ export default function App() {
         )}
         <div className="space-y-0">{dataList.map((league) => (
             <div key={league.id} className="bg-[#0f172a] border-b border-[#334155] last:border-0">
-                {/* FIX: Header del campionato trasformato in BUTTON */}
-                <button onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="w-full flex justify-between items-center px-3 py-2 bg-[#334155] hover:bg-[#3d4e6b] cursor-pointer clickable-item">
+                {/* FIX: onTouchStart vuoto per iOS */}
+                <button onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} onTouchStart={() => {}} className="w-full flex justify-between items-center px-3 py-2 bg-[#334155] hover:bg-[#3d4e6b] cursor-pointer clickable-item">
                     <div className="flex items-center gap-3">
                         <Star size={16} onClick={(e) => { e.stopPropagation(); setLeagues(leagues.map(l => l.id === league.id ? { ...l, isPinned: !l.isPinned } : l)); }} className={`cursor-pointer ${league.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500 hover:text-gray-400'}`} />
                         <img src={`https://flagcdn.com/20x15/${league.country}.png`} alt={league.country} className="w-4 h-3 rounded-[1px] shadow-sm"/><span className="text-xs font-bold text-white uppercase">{league.name}</span>
@@ -779,7 +781,7 @@ export default function App() {
             </>
           )}
       </div>
-      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 clickable-item"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
+      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} onTouchStart={() => {}} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} onTouchStart={() => {}} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} onTouchStart={() => {}} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 clickable-item"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
     </div>
   );
 }
