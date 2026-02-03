@@ -1,49 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI (FIX iOS TOUCH & SCROLLBAR) ---
+// --- STILI CSS GLOBALI ---
 const globalStyles = `
-  /* 1. Reset e impostazioni base */
   * { 
     -ms-overflow-style: none; 
     scrollbar-width: none; 
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash grigio su iOS */
+    -webkit-tap-highlight-color: transparent; 
     box-sizing: border-box;
   }
-
-  /* 2. Nascondere le scrollbar (Aggressivo con !important) */
-  *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
+  *::-webkit-scrollbar { display: none !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
 
-  /* 3. Impostazioni Body e Touch */
   html, body { 
     background-color: #0f172a; 
     color: white; 
     margin: 0; 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    touch-action: manipulation; /* Velocizza la risposta al tocco */
-    overscroll-behavior-y: none; /* Previene il rimbalzo della pagina su iOS */
+    touch-action: manipulation; 
+    overscroll-behavior-y: none;
   }
 
-  /* 4. Transizioni */
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 
-  /* 5. FIX CRITICO PER DOPPIO CLICK SU IPHONE 
-     Su dispositivi touch (hover: none), disabilitiamo gli effetti hover che bloccano il click.
-     Invece dell'hover, usiamo 'active' per il feedback immediato al tocco.
-  */
-  @media (hover: hover) {
-    /* Stili per PC (con mouse) */
-    .match-row:hover { background-color: #25334d !important; }
-    .btn-hover:hover { opacity: 0.8 !important; }
+  /* Reset per i button su mobile per evitare stili di default brutti */
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    -webkit-appearance: none;
   }
 
+  @media (hover: hover) {
+    .match-row:hover { background-color: #25334d !important; }
+    .clickable-item:hover { opacity: 0.8; }
+  }
   @media (hover: none) {
-    /* Stili per Mobile (Touch) - NIENTE HOVER */
-    .match-row:hover { background-color: #1e293b !important; } /* Rimane il colore base */
-    .match-row:active { background-color: #25334d !important; } /* Feedback solo mentre premi */
-    *:hover { background-color: inherit; color: inherit; } /* Reset generico */
+    .match-row:active { background-color: #25334d !important; }
   }
 `;
 
@@ -165,17 +163,17 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
   const handleClick = (id) => { onDateClick(id); centerItem(id); };
   return (
     <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg">
-        {/* Style inline per forzare l'assenza di scrollbar su tutti i browser */}
         <div ref={scrollContainerRef} className="flex w-full overflow-x-auto no-scrollbar items-center px-2 gap-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dateList.map((d) => {
                 const isSelected = selectedDateId === d.id;
                 return (
-                    <div key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
+                    // FIX: Convertito in BUTTON per risposta immediata su iOS
+                    <button key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] transition-colors rounded-none border-b-2 clickable-item ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
-                    </div>
+                    </button>
                 );
             })}
         </div>
@@ -189,8 +187,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        // CLASSE match-row FONDAMENTALE PER IL FIX MOBILE
-        <div onClick={onClick} className="match-row flex items-center py-3 px-3 cursor-pointer border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
+        // FIX: Convertito in BUTTON per risposta immediata su iOS
+        <button onClick={onClick} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -212,7 +210,7 @@ const MatchRow = ({ match, onClick }) => {
                     </div>
                 )}
             </div>
-        </div>
+        </button>
     );
 };
 
@@ -301,7 +299,7 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
               <select value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} className="w-full h-full bg-[#0f172a] text-white font-bold text-lg text-center appearance-none rounded-md border border-[#334155] focus:border-cyan-500 focus:outline-none">{statDef.lines.map(line => <option key={line} value={line}>{line}</option>)}</select>
               <ChevronDown size={14} className="absolute top-0 right-1 h-full pointer-events-none text-gray-500 flex items-center"/>
           </div>
-          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 active:bg-cyan-600 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
               <Plus size={24} strokeWidth={3} />
           </button>
        </div>
@@ -411,8 +409,10 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       {showMainBets && <MainBettingWidget onAdd={handleAddMainBet} ticketGroups={ticketGroups} onAddGroup={onAddGroup} />}
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
-          {/* FIX: AGGIUNTO STYLE INLINE PER SCROLLBAR TABS */}
-          <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
+          <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* FIX: Tab come BOTTONI per iOS */}
+            {TABS.map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 clickable-item ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</button>))}
+          </div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
           {activeTab === "STATISTICHE" && (
@@ -724,13 +724,14 @@ export default function App() {
         )}
         <div className="space-y-0">{dataList.map((league) => (
             <div key={league.id} className="bg-[#0f172a] border-b border-[#334155] last:border-0">
-                <div onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="flex justify-between items-center px-3 py-2 bg-[#334155] hover:bg-[#3d4e6b] cursor-pointer">
+                {/* FIX: Header del campionato trasformato in BUTTON */}
+                <button onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="w-full flex justify-between items-center px-3 py-2 bg-[#334155] hover:bg-[#3d4e6b] cursor-pointer clickable-item">
                     <div className="flex items-center gap-3">
                         <Star size={16} onClick={(e) => { e.stopPropagation(); setLeagues(leagues.map(l => l.id === league.id ? { ...l, isPinned: !l.isPinned } : l)); }} className={`cursor-pointer ${league.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500 hover:text-gray-400'}`} />
                         <img src={`https://flagcdn.com/20x15/${league.country}.png`} alt={league.country} className="w-4 h-3 rounded-[1px] shadow-sm"/><span className="text-xs font-bold text-white uppercase">{league.name}</span>
                     </div>
                     {!isLiveTab && <ChevronDown size={14} className={`text-gray-400 transition-transform ${collapsedLeagues.includes(league.id) ? '-rotate-90' : ''}`} />}
-                </div>
+                </button>
                 {!collapsedLeagues.includes(league.id) && <div>{league.matches.filter(m => isLiveTab ? m.status === 'LIVE' : (m.dateOffset || 0) === selectedDateId).sort((a,b) => a.time.localeCompare(b.time)).map((match) => (
                     <MatchRow key={match.id} match={match} onClick={() => { setSelectedMatchDetail({ ...match, leagueName: league.name }); }} />
                 ))}</div>}
@@ -778,7 +779,7 @@ export default function App() {
             </>
           )}
       </div>
-      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><div onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></div><div onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></div></div><div onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></div><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
+      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 clickable-item"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
     </div>
   );
 }
