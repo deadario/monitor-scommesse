@@ -1,35 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI (MOBILE TOUCH FIX + NO SCROLLBAR) ---
+// --- STILI CSS GLOBALI (FIX iOS TOUCH & SCROLLBAR) ---
 const globalStyles = `
+  /* 1. Reset e impostazioni base */
   * { 
     -ms-overflow-style: none; 
     scrollbar-width: none; 
-    -webkit-tap-highlight-color: transparent; 
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash grigio su iOS */
+    box-sizing: border-box;
   }
-  
-  /* REGOLE SCROLLBAR */
-  *::-webkit-scrollbar { display: none !important; }
+
+  /* 2. Nascondere le scrollbar (Aggressivo con !important) */
+  *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
 
-  /* FIX CRITICO MOBILE: Disabilita lo zoom al doppio tocco e velocizza il click */
+  /* 3. Impostazioni Body e Touch */
   html, body { 
     background-color: #0f172a; 
     color: white; 
     margin: 0; 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    touch-action: manipulation; /* <--- QUESTA È LA CHIAVE PER IL CLICK SINGOLO */
+    touch-action: manipulation; /* Velocizza la risposta al tocco */
+    overscroll-behavior-y: none; /* Previene il rimbalzo della pagina su iOS */
   }
 
-  /* TRANSIZIONI */
+  /* 4. Transizioni */
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 
-  /* FIX HOVER SU MOBILE: Impedisce che il primo tocco venga "mangiato" dall'effetto hover */
+  /* 5. FIX CRITICO PER DOPPIO CLICK SU IPHONE 
+     Su dispositivi touch (hover: none), disabilitiamo gli effetti hover che bloccano il click.
+     Invece dell'hover, usiamo 'active' per il feedback immediato al tocco.
+  */
+  @media (hover: hover) {
+    /* Stili per PC (con mouse) */
+    .match-row:hover { background-color: #25334d !important; }
+    .btn-hover:hover { opacity: 0.8 !important; }
+  }
+
   @media (hover: none) {
-    .match-row:hover { background-color: #1e293b !important; }
-    .clickable-item:hover { background-color: inherit !important; opacity: 1 !important; }
+    /* Stili per Mobile (Touch) - NIENTE HOVER */
+    .match-row:hover { background-color: #1e293b !important; } /* Rimane il colore base */
+    .match-row:active { background-color: #25334d !important; } /* Feedback solo mentre premi */
+    *:hover { background-color: inherit; color: inherit; } /* Reset generico */
   }
 `;
 
@@ -151,14 +165,14 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
   const handleClick = (id) => { onDateClick(id); centerItem(id); };
   return (
     <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg">
-        {/* Style inline per forzare l'assenza di scrollbar */}
+        {/* Style inline per forzare l'assenza di scrollbar su tutti i browser */}
         <div ref={scrollContainerRef} className="flex w-full overflow-x-auto no-scrollbar items-center px-2 gap-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dateList.map((d) => {
                 const isSelected = selectedDateId === d.id;
                 return (
                     <div key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 clickable-item ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer transition-colors rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </div>
@@ -175,8 +189,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        // Added match-row class for safe mobile selection
-        <div onClick={onClick} className="match-row flex items-center py-3 px-3 hover:bg-[#25334d] cursor-pointer border-t border-[#334155] bg-[#1e293b]">
+        // CLASSE match-row FONDAMENTALE PER IL FIX MOBILE
+        <div onClick={onClick} className="match-row flex items-center py-3 px-3 cursor-pointer border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -231,12 +245,12 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
             <div className="space-y-2">
                <div className="flex gap-2">
                    {["1", "X", "2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-white font-bold py-3 rounded text-xs transition-colors">{sign}</button>
                    ))}
                </div>
                <div className="flex gap-2">
                    {["1X", "12", "X2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] btn-hover border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] transition-colors">{sign}</button>
                    ))}
                </div>
            </div>
@@ -280,22 +294,22 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
 
        <div className="flex items-center justify-between gap-3 h-10">
           <div className="flex flex-1 gap-2 h-full">
-              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] hover:border-gray-500'}`}>UNDER</button>
-              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] hover:border-gray-500'}`}>OVER</button>
+              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>UNDER</button>
+              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] active:border-gray-500'}`}>OVER</button>
           </div>
           <div className="relative h-full w-20">
               <select value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} className="w-full h-full bg-[#0f172a] text-white font-bold text-lg text-center appearance-none rounded-md border border-[#334155] focus:border-cyan-500 focus:outline-none">{statDef.lines.map(line => <option key={line} value={line}>{line}</option>)}</select>
               <ChevronDown size={14} className="absolute top-0 right-1 h-full pointer-events-none text-gray-500 flex items-center"/>
           </div>
-          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 active:bg-cyan-600 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
               <Plus size={24} strokeWidth={3} />
           </button>
        </div>
 
        {statDef.id === 'goals' && activeContext.side === 'Totale' && (
            <div className="mt-3 pt-3 border-t border-[#334155] flex gap-2">
-               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
-               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] hover:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] active:bg-[#334155] border border-[#334155] text-white font-bold py-2 rounded text-[10px] transition-colors">NO GOAL</button>
            </div>
        )}
     </div>
@@ -320,7 +334,7 @@ const StatRow = ({ statDef, homeVal, awayVal, onExpand, isExpanded, activeContex
 
   return (
     <div className="bg-[#020617] last:border-0">
-      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'hover:bg-[#172033] transition-colors'}`}>
+      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'active:bg-[#172033] transition-colors'}`}>
           <div className="flex justify-between items-center mb-2 text-sm font-medium">
               <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
               <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'}`}>{statDef.label}</div>
@@ -397,7 +411,8 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       {showMainBets && <MainBettingWidget onAdd={handleAddMainBet} ticketGroups={ticketGroups} onAddGroup={onAddGroup} />}
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
-          <div className="flex overflow-x-auto no-scrollbar">{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
+          {/* FIX: AGGIUNTO STYLE INLINE PER SCROLLBAR TABS */}
+          <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
           {activeTab === "STATISTICHE" && (
