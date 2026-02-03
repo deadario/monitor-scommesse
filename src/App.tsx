@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI ---
+// --- STILI CSS GLOBALI (VERSIONE 9.0 - NO TEXT SELECTION) ---
 const globalStyles = `
   * { 
     -ms-overflow-style: none; 
     scrollbar-width: none; 
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash al tocco */
+    -webkit-tap-highlight-color: transparent !important; 
     box-sizing: border-box;
+    touch-action: manipulation; /* Dice al browser di non aspettare il doppio tocco per lo zoom */
   }
+  
   *::-webkit-scrollbar { display: none !important; }
   .no-scrollbar::-webkit-scrollbar { display: none !important; }
   .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
@@ -18,10 +20,14 @@ const globalStyles = `
     color: white; 
     margin: 0; 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    touch-action: manipulation; /* Velocizza il click */
+    cursor: default;
+    -webkit-user-select: none; /* Impedisce la selezione testo su Safari Mobile */
+    user-select: none;
   }
   
-  .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+  /* Feedback visivo immediato solo alla pressione */
+  .row-active:active { background-color: #334155 !important; }
+  .btn-active:active { opacity: 0.7; transform: scale(0.98); }
 `;
 
 // --- ICONA PALLONE CUSTOM ---
@@ -107,7 +113,7 @@ const ToastNotification = ({ message, show, onClose }) => {
     
     if (!show) return null;
     return (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-cyan-500 text-black px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-5 pointer-events-none">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-cyan-500 text-black px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-5 pointer-events-none select-none">
             <Check size={16} strokeWidth={3} />
             <span className="text-xs font-bold">{message}</span>
         </div>
@@ -115,7 +121,7 @@ const ToastNotification = ({ message, show, onClose }) => {
 };
 
 const HomeHeader = () => (
-  <div className="bg-[#1e293b] px-4 py-3 flex justify-between items-center sticky top-0 z-50 border-b border-[#334155]">
+  <div className="bg-[#1e293b] px-4 py-3 flex justify-between items-center sticky top-0 z-50 border-b border-[#334155] select-none">
       <div className="flex items-center gap-1">
           <div className="p-1.5"><SoccerBallIcon size={20} className="text-white" /></div>
           <span className="text-white font-bold text-sm ml-1">Calcio</span>
@@ -141,15 +147,14 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
   useEffect(() => { setTimeout(() => centerItem(0), 100); }, []);
   const handleClick = (id) => { onDateClick(id); centerItem(id); };
   return (
-    <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg">
+    <div className="bg-[#0f172a] border-b border-[#1e293b] h-[55px] flex items-center sticky top-[57px] z-40 shadow-lg select-none">
         <div ref={scrollContainerRef} className="flex w-full overflow-x-auto no-scrollbar items-center px-2 gap-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dateList.map((d) => {
                 const isSelected = selectedDateId === d.id;
                 return (
                     <div key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        // RIMOSSO transition-colors per evitare lag su touch
-                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] cursor-pointer rounded-none border-b-2 row-active ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </div>
@@ -166,8 +171,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        // FIX CRITICO: RIMOSSO "hover:bg-[#25334d]"
-        <div onClick={onClick} className="flex items-center py-3 px-3 cursor-pointer border-t border-[#334155] bg-[#1e293b]">
+        // FIX: select-none per impedire che iOS pensi che vuoi selezionare il testo
+        <div onClick={onClick} className="flex items-center py-3 px-3 cursor-pointer border-t border-[#334155] bg-[#1e293b] row-active select-none">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -201,7 +206,7 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
     const saveNewGroup = () => { if (newGroupName.trim() !== "") { onAddGroup(newGroupName); setSelectedGroup(newGroupName); setIsCreatingGroup(false); } else { setIsCreatingGroup(false); }};
 
     return (
-        <div className="bg-[#1e293b] p-4 border-b border-[#334155] animate-in fade-in slide-in-from-top-2">
+        <div className="bg-[#1e293b] p-4 border-b border-[#334155] animate-in fade-in slide-in-from-top-2 select-none">
             <div className="flex justify-end items-center mb-3">
                <div className="flex items-center gap-2">
                   <Ticket size={14} className="text-white"/>
@@ -222,12 +227,12 @@ const MainBettingWidget = ({ onAdd, ticketGroups, onAddGroup }) => {
             <div className="space-y-2">
                <div className="flex gap-2">
                    {["1", "X", "2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-3 rounded text-xs">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("ESITO", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-3 rounded text-xs row-active">{sign}</button>
                    ))}
                </div>
                <div className="flex gap-2">
                    {["1X", "12", "X2"].map(sign => (
-                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px]">{sign}</button>
+                       <button key={sign} onClick={() => onAdd("DOPPIA CHANCE", sign, null, "Finale", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-gray-300 font-bold py-2 rounded text-[10px] row-active">{sign}</button>
                    ))}
                </div>
            </div>
@@ -245,7 +250,7 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
   const saveNewGroup = () => { if (newGroupName.trim() !== "") { onAddGroup(newGroupName); setSelectedGroup(newGroupName); setIsCreatingGroup(false); } else { setIsCreatingGroup(false); }};
   
   return (
-    <div className="bg-[#1e293b] py-3 px-4 border-t border-[#334155] shadow-inner animate-in slide-in-from-top-1">
+    <div className="bg-[#1e293b] py-3 px-4 border-t border-[#334155] shadow-inner animate-in slide-in-from-top-1 select-none">
        <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
              <div className="w-1 h-3 bg-cyan-500 rounded-full"></div>
@@ -271,22 +276,22 @@ const InlineBettingWidget = ({ statDef, activeContext, onAdd, ticketGroups, onAd
 
        <div className="flex items-center justify-between gap-3 h-10">
           <div className="flex flex-1 gap-2 h-full">
-              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] hover:border-gray-500'}`}>UNDER</button>
-              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase transition-all border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155] hover:border-gray-500'}`}>OVER</button>
+              <button onClick={() => setBetType("Under")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase border ${betType === 'Under' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155]'}`}>UNDER</button>
+              <button onClick={() => setBetType("Over")} className={`flex-1 rounded-md flex items-center justify-center font-bold text-[10px] uppercase border ${betType === 'Over' ? 'bg-cyan-500 text-black border-cyan-500 shadow-sm' : 'bg-[#0f172a] text-gray-400 border-[#334155]'}`}>OVER</button>
           </div>
           <div className="relative h-full w-20">
               <select value={selectedLine} onChange={(e) => setSelectedLine(e.target.value)} className="w-full h-full bg-[#0f172a] text-white font-bold text-lg text-center appearance-none rounded-md border border-[#334155] focus:border-cyan-500 focus:outline-none">{statDef.lines.map(line => <option key={line} value={line}>{line}</option>)}</select>
               <ChevronDown size={14} className="absolute top-0 right-1 h-full pointer-events-none text-gray-500 flex items-center"/>
           </div>
-          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+          <button onClick={() => onAdd(statDef.label, betType, selectedLine, activeContext.side, selectedGroup)} className="h-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-black rounded-md flex items-center justify-center shadow-lg btn-active">
               <Plus size={24} strokeWidth={3} />
           </button>
        </div>
 
        {statDef.id === 'goals' && activeContext.side === 'Totale' && (
            <div className="mt-3 pt-3 border-t border-[#334155] flex gap-2">
-               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px]">GOAL</button>
-               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px]">NO GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "GG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px] row-active">GOAL</button>
+               <button onClick={() => onAdd("GOL/NOGOL", "NG", null, "Entrambe", selectedGroup)} className="flex-1 bg-[#0f172a] border border-[#334155] text-white font-bold py-2 rounded text-[10px] row-active">NO GOAL</button>
            </div>
        )}
     </div>
@@ -311,11 +316,11 @@ const StatRow = ({ statDef, homeVal, awayVal, onExpand, isExpanded, activeContex
 
   return (
     <div className="bg-[#020617] last:border-0">
-      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'transition-colors'}`}>
+      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'row-active'} select-none`}>
           <div className="flex justify-between items-center mb-2 text-sm font-medium">
-              <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
-              <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'}`}>{statDef.label}</div>
-              <div onClick={() => onExpand(statDef.id, "Ospite", awayVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors ${isExpanded && activeContext.side === 'Ospite' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{awayVal}</div>
+              <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
+              <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400'}`}>{statDef.label}</div>
+              <div onClick={() => onExpand(statDef.id, "Ospite", awayVal)} className={`w-12 text-center py-1 rounded cursor-pointer ${isExpanded && activeContext.side === 'Ospite' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{awayVal}</div>
           </div>
           <div className="flex gap-1 h-1 mt-1 opacity-80">
               <div className="flex-1 flex justify-end bg-[#334155] rounded-l-full overflow-hidden">
@@ -364,12 +369,12 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
   const TABS = ["TABELLINO", "STATISTICHE", "STATS GIOCATORI", "FORMAZIONI", "PRECEDENTI"];
   
   return (
-    <div className="pb-24 bg-[#0f172a] min-h-screen relative z-30 flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="pb-24 bg-[#0f172a] min-h-screen relative z-30 flex flex-col animate-in slide-in-from-right duration-300 select-none">
       <div className="bg-[#1e293b] sticky top-0 z-50 border-b border-[#334155] flex justify-between items-center p-4 shadow-md">
-         <ArrowLeft className="text-gray-400 cursor-pointer hover:text-white" onClick={onClose} />
+         <ArrowLeft className="text-gray-400 cursor-pointer btn-active" onClick={onClose} />
          <div className="flex items-center gap-4">
-            <Bell size={20} className="text-gray-400 hover:text-white cursor-pointer" />
-            <Star size={22} className={`cursor-pointer transition-all active:scale-90 ${isMonitored ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400 hover:text-white'}`} onClick={() => onToggleMonitor(match)}/>
+            <Bell size={20} className="text-gray-400 btn-active cursor-pointer" />
+            <Star size={22} className={`cursor-pointer btn-active ${isMonitored ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400 hover:text-white'}`} onClick={() => onToggleMonitor(match)}/>
          </div>
       </div>
       <div className="bg-[#020617] h-8 flex items-center justify-center border-b border-[#334155]"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{leagueName} • {match.round || "Giornata --"}</span></div>
@@ -377,7 +382,7 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       <div className="bg-[#1e293b] px-6 py-6 flex justify-between items-center border-b border-[#334155]">
             <div className="flex flex-col items-center w-1/3"><div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xl text-white font-bold border-2 border-[#334155] mb-2 shadow-lg" style={{ borderColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div><span className="text-sm font-bold text-white text-center leading-tight">{match.teams[0]}</span></div>
             
-            <div className="flex flex-col items-center cursor-pointer active:scale-95 transition-transform p-2 rounded hover:bg-[#334155]" onClick={() => setShowMainBets(!showMainBets)}>
+            <div className="flex flex-col items-center cursor-pointer btn-active p-2 rounded row-active" onClick={() => setShowMainBets(!showMainBets)}>
                 <div className="text-3xl font-black text-white tracking-widest mb-1">{match.score[0]} - {match.score[1]}</div>
                 <div className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${match.status === 'LIVE' ? 'bg-gray-600 text-white' : 'bg-[#334155] text-gray-400'}`}>{match.minute !== '-' ? match.minute : match.time}</div>
             </div>
@@ -388,7 +393,7 @@ const MatchDetailView = ({ match, leagueName, onClose, onAddTicket, onToggleMoni
       {showMainBets && <MainBettingWidget onAdd={handleAddMainBet} ticketGroups={ticketGroups} onAddGroup={onAddGroup} />}
 
       <div className="bg-[#0f172a] border-b border-[#334155] sticky top-[60px] z-40 shadow-lg">
-          <div className="flex overflow-x-auto no-scrollbar">{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors border-b-2 ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}>{tab}</div>))}</div>
+          <div className="flex overflow-x-auto no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>{TABS.map(tab => (<div key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 px-4 py-3 text-[10px] font-bold uppercase tracking-wider cursor-pointer border-b-2 row-active ${activeTab === tab ? 'text-cyan-400 border-cyan-400' : 'text-gray-500 border-transparent'}`}>{tab}</div>))}</div>
       </div>
       <div className="flex-1 bg-[#020617]"> 
           {activeTab === "STATISTICHE" && (
@@ -544,7 +549,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="font-mono font-bold text-white">{m.score[0]} - {m.score[1]}</span>
-                                    <Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer" onClick={() => onRemoveTicket(t.id)}/>
+                                    <Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer btn-active" onClick={() => onRemoveTicket(t.id)}/>
                                 </div>
                             </div>
                         );
@@ -574,7 +579,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                     <div key={group} className="animate-in fade-in mb-1">
                          <div className="px-3 py-1 border-b border-[#1e293b] bg-[#020617] flex justify-between items-center shadow-sm">
                              {editingGroup === group ? (
-                                 <div className="flex items-center gap-2 w-full max-w-[200px]"><input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} className="bg-transparent text-[9px] font-bold text-cyan-400 uppercase tracking-widest outline-none border-b border-cyan-500 w-full" onKeyDown={(e) => { if(e.key === 'Enter') saveEdit(); }} onBlur={saveEdit}/><Check size={12} className="text-green-500 cursor-pointer" onClick={saveEdit}/></div>
+                                 <div className="flex items-center gap-2 w-full max-w-[200px]"><input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} className="bg-transparent text-[9px] font-bold text-cyan-400 uppercase tracking-widest outline-none border-b border-cyan-500 w-full" onKeyDown={(e) => { if(e.key === 'Enter') saveEdit(); }} onBlur={saveEdit}/><Check size={12} className="text-green-500 cursor-pointer btn-active" onClick={saveEdit}/></div>
                              ) : (
                                 <span onClick={() => startEdit(group)} className={`text-[9px] font-bold text-cyan-400 uppercase tracking-widest ${group !== "MONITOR STATS" ? 'cursor-pointer hover:underline decoration-dashed' : 'cursor-default'}`}>{group}</span>
                              )}
@@ -617,7 +622,7 @@ const MonitorView = ({ tickets, ticketGroups, leagues, onRemoveTicket, onRenameG
                                                      </div>
                                                      {matchData.status !== 'NS' ? (<div className="h-[3px] bg-[#1e293b] w-full rounded-full overflow-hidden"><div className="h-full bg-gray-400" style={{ width: `${pct}%` }}></div></div>) : (<div className="h-[3px] bg-[#1e293b] w-full rounded-full opacity-50"></div>)}
                                                  </div>
-                                                 <div className="flex-shrink-0 ml-1"><Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer" onClick={() => onRemoveTicket(bet.id)}/></div>
+                                                 <div className="flex-shrink-0 ml-1"><Trash2 size={13} className="text-gray-600 hover:text-red-500 cursor-pointer btn-active" onClick={() => onRemoveTicket(bet.id)}/></div>
                                              </div>
                                          );
                                      })}
@@ -704,8 +709,7 @@ export default function App() {
         )}
         <div className="space-y-0">{dataList.map((league) => (
             <div key={league.id} className="bg-[#0f172a] border-b border-[#334155] last:border-0">
-                {/* FIX: Rimosso hover:bg-... */}
-                <div onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="flex justify-between items-center px-3 py-2 bg-[#334155] cursor-pointer">
+                <div onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="flex justify-between items-center px-3 py-2 bg-[#334155] cursor-pointer row-active">
                     <div className="flex items-center gap-3">
                         <Star size={16} onClick={(e) => { e.stopPropagation(); setLeagues(leagues.map(l => l.id === league.id ? { ...l, isPinned: !l.isPinned } : l)); }} className={`cursor-pointer ${league.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500 hover:text-gray-400'}`} />
                         <img src={`https://flagcdn.com/20x15/${league.country}.png`} alt={league.country} className="w-4 h-3 rounded-[1px] shadow-sm"/><span className="text-xs font-bold text-white uppercase">{league.name}</span>
@@ -760,7 +764,7 @@ export default function App() {
             </>
           )}
       </div>
-      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><div onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></div><div onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></div></div><div onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></div><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
+      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><div onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full btn-active ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></div><div onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full btn-active ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></div></div><div onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 btn-active"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></div><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500 btn-active"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500 btn-active"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
     </div>
   );
 }
