@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Plus, X, ChevronDown, Calendar, Search, ArrowLeft, BarChart2, History, Trophy, Radio, User, CircleDashed, Star, Bell, MonitorPlay, Check, Ticket, Save, AlertCircle, Edit2 } from 'lucide-react';
 
-// --- STILI CSS GLOBALI (VERSIONE 4.4 - MOBILE FIRST & NO HOVER LAG) ---
+// --- STILI CSS GLOBALI (VERSIONE 4.5 - NO INLINE HOVERS) ---
 const globalStyles = `
-  /* 1. RESET TOTALE PER MOBILE (Rimuove flash e scrollbar) */
   * { 
     -ms-overflow-style: none; 
     scrollbar-width: none; 
-    -webkit-tap-highlight-color: transparent !important; /* FONDAMENTALE: Rimuove lo scurimento al tocco */
+    -webkit-tap-highlight-color: transparent !important; 
     box-sizing: border-box;
-    touch-action: manipulation; /* Disabilita doppio tocco per zoom */
+    touch-action: manipulation;
   }
   
-  *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
-  .no-scrollbar::-webkit-scrollbar { display: none !important; }
-  .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+  *::-webkit-scrollbar { display: none !important; }
 
   html, body { 
     background-color: #0f172a; 
@@ -23,7 +20,7 @@ const globalStyles = `
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
-    cursor: default; /* Default cursore normale */
+    cursor: default;
   }
 
   button {
@@ -36,25 +33,31 @@ const globalStyles = `
     -webkit-appearance: none;
   }
 
-  /* 2. TRANSIZIONI */
-  .transition-colors { transition: background-color 0.1s ease-out, opacity 0.1s ease-out; }
   .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 
-  /* 3. LOGICA DI INTERAZIONE DIVISA (LA CHIAVE DEL FIX) */
+  /* --- GESTIONE INTERAZIONI MOBILE-FIRST --- */
 
-  /* COMPORTAMENTO BASE (MOBILE/TOUCH): Usa solo :active per feedback immediato */
+  /* 1. SU MOBILE (TOUCH): NESSUN HOVER, SOLO ACTIVE */
   .match-row:active { background-color: #25334d !important; }
-  .clickable-item:active { opacity: 0.6 !important; }
-  .btn-primary:active { background-color: #0891b2 !important; transform: scale(0.98); }
+  .league-header:active { background-color: #3d4e6b !important; }
+  .date-item:active { background-color: #1e293b !important; }
+  .nav-item:active { transform: scale(0.95); opacity: 0.7; }
+  
+  .btn-primary:active { background-color: #0891b2 !important; }
   .btn-secondary:active { background-color: #334155 !important; }
 
-  /* COMPORTAMENTO DESKTOP (SOLO SE C'È UN MOUSE): Aggiunge hover */
+  /* 2. SU DESKTOP (MOUSE): ABILITA GLI EFFETTI HOVER */
   @media (hover: hover) {
-    .match-row:hover { background-color: #25334d !important; cursor: pointer; }
-    .clickable-item:hover { opacity: 0.8; cursor: pointer; }
+    .match-row:hover { background-color: #25334d; cursor: pointer; }
+    .league-header:hover { background-color: #3d4e6b; cursor: pointer; }
+    .date-item:hover { border-color: #22d3ee; cursor: pointer; }
+    .nav-item:hover { opacity: 1; cursor: pointer; color: white; }
+    
     .btn-primary:hover { background-color: #0891b2; }
-    .btn-secondary:hover { background-color: #334155; text-decoration: none; }
-    button, select { cursor: pointer; }
+    .btn-secondary:hover { background-color: #334155; }
+    
+    /* Icone header */
+    .icon-hover:hover { color: white; cursor: pointer; }
   }
 `;
 
@@ -156,7 +159,7 @@ const HomeHeader = () => (
           <ChevronDown size={14} className="text-gray-400" />
       </div>
       <div className="flex items-center gap-4">
-          <Search size={20} className="text-gray-400" /><div className="relative"><User size={20} className="text-gray-400" /></div>
+          <Search size={20} className="text-gray-400 icon-hover" /><div className="relative"><User size={20} className="text-gray-400 icon-hover" /></div>
       </div>
   </div>
 );
@@ -182,7 +185,8 @@ const DateBar = ({ selectedDateId, onDateClick }) => {
                 return (
                     <button key={d.id} ref={(node) => { if (node) itemsRef.current.set(d.id, node); else itemsRef.current.delete(d.id); }}
                         onClick={() => handleClick(d.id)}
-                        className={`clickable-item flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] transition-colors rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
+                        // Rimosso 'transition-colors' per evitare lag, classi date-item per css
+                        className={`date-item flex-shrink-0 flex flex-col items-center justify-center min-w-[50px] h-[40px] rounded-none border-b-2 ${isSelected ? 'bg-[#1e293b] border-cyan-400' : 'bg-transparent border-transparent text-gray-500'}`}>
                         <span className={`text-[10px] font-bold uppercase leading-none mb-1 ${isSelected ? 'text-white' : ''}`}>{d.label}</span>
                         <span className={`text-[9px] font-mono leading-none ${isSelected ? 'text-cyan-400' : ''}`}>{d.date}</span>
                     </button>
@@ -199,7 +203,8 @@ const MatchRow = ({ match, onClick }) => {
     const isPost = match.status === 'FT';
 
     return (
-        <button onClick={onClick} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b] transition-colors duration-75">
+        // Rimosso hover:bg-... inline. Usa classe match-row.
+        <button onClick={onClick} className="match-row w-full text-left block flex items-center py-3 px-3 border-t border-[#334155] bg-[#1e293b]">
             <div className="flex-1 flex flex-col justify-center gap-1.5">
                 <div className="flex items-center">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold border border-gray-600 mr-2" style={{ backgroundColor: match.colors ? match.colors[0] : '#333' }}>{match.teams[0].substring(0,1)}</div>
@@ -343,7 +348,7 @@ const StatRow = ({ statDef, homeVal, awayVal, onExpand, isExpanded, activeContex
 
   return (
     <div className="bg-[#020617] last:border-0">
-      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'match-row transition-colors'}`}>
+      <div className={`py-4 px-4 ${isExpanded ? 'bg-[#1e293b]' : 'match-row'}`}>
           <div className="flex justify-between items-center mb-2 text-sm font-medium">
               <div onClick={() => onExpand(statDef.id, "Casa", homeVal)} className={`w-12 text-center py-1 rounded cursor-pointer transition-colors clickable-item ${isExpanded && activeContext.side === 'Casa' ? 'bg-cyan-900 text-white border border-cyan-600' : 'text-white font-bold'}`}>{homeVal}</div>
               <div onClick={() => onExpand(statDef.id, "Totale", total)} className={`flex-1 text-center text-[10px] uppercase tracking-widest font-bold cursor-pointer py-1 rounded transition-colors clickable-item ${isExpanded && activeContext.side === 'Totale' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'}`}>{statDef.label}</div>
@@ -734,7 +739,7 @@ export default function App() {
         )}
         <div className="space-y-0">{dataList.map((league) => (
             <div key={league.id} className="bg-[#0f172a] border-b border-[#334155] last:border-0">
-                <button onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="w-full flex justify-between items-center px-3 py-2 bg-[#334155] cursor-pointer clickable-item">
+                <button onClick={() => !isLiveTab && setCollapsedLeagues(prev => prev.includes(league.id) ? prev.filter(id => id !== league.id) : [...prev, league.id])} className="league-header w-full flex justify-between items-center px-3 py-2 bg-[#334155] cursor-pointer">
                     <div className="flex items-center gap-3">
                         <Star size={16} onClick={(e) => { e.stopPropagation(); setLeagues(leagues.map(l => l.id === league.id ? { ...l, isPinned: !l.isPinned } : l)); }} className={`cursor-pointer ${league.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500 hover:text-gray-400'}`} />
                         <img src={`https://flagcdn.com/20x15/${league.country}.png`} alt={league.country} className="w-4 h-3 rounded-[1px] shadow-sm"/><span className="text-xs font-bold text-white uppercase">{league.name}</span>
@@ -788,7 +793,7 @@ export default function App() {
             </>
           )}
       </div>
-      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`flex flex-col items-center gap-1 cursor-pointer w-full clickable-item ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50 clickable-item"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
+      <div className="fixed bottom-0 w-full bg-[#0f172a] border-t border-[#1e293b] h-[70px] z-[100]"><div className="relative w-full h-full flex justify-between px-2"><div className="flex w-2/5 justify-around items-center h-full pt-2"><button onClick={() => { setActiveTab('tutte'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full ${activeTab === 'tutte' && !selectedMatchDetail ? 'opacity-100 text-white' : 'opacity-40 text-gray-500'}`}><Calendar size={20} /> <span className="text-[9px] font-bold">Tutte</span></button><button onClick={() => { setActiveTab('live'); setSelectedMatchDetail(null); }} className={`nav-item flex flex-col items-center gap-1 cursor-pointer w-full ${activeTab === 'live' ? 'opacity-100 text-red-500' : 'opacity-40 text-gray-500'}`}><Radio size={20} /> <span className="text-[9px] font-bold">Live</span></button></div><button onClick={() => { setActiveTab('monitor'); setSelectedMatchDetail(null); }} className="nav-item absolute left-0 right-0 mx-auto w-16 -top-2 flex flex-col items-center cursor-pointer z-50"><div className={`w-14 h-14 rounded-full border-[6px] border-[#0f172a] shadow-xl flex items-center justify-center transition-transform active:scale-95 ${activeTab === 'monitor' ? 'bg-cyan-500 text-black' : 'bg-[#1e293b] text-gray-400'}`}><BarChart2 size={24} strokeWidth={2.5} /></div><span className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${activeTab === 'monitor' ? 'text-cyan-400' : 'text-gray-500'}`}>Monitor</span></button><div className="flex w-2/5 justify-around items-center h-full pt-2"><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><History size={20} /> <span className="text-[9px] font-bold">Storico</span></div><div className="nav-item flex flex-col items-center gap-1 cursor-pointer opacity-40 text-gray-500"><Trophy size={20} /> <span className="text-[9px] font-bold">Classifica</span></div></div></div></div>
     </div>
   );
 }
